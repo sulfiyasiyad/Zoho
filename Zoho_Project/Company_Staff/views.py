@@ -44032,3 +44032,202 @@ def shareDayBookReportToEmail(request):
             return redirect(dayBookReport)
 
 #---------------- Zoho Final Daybook - Ginto Shaji - End-------------------->
+def estimatedetails(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+            
+            
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+
+        # rec = RecurringInvoice.objects.filter(company = cmp)
+        allmodules= ZohoModules.objects.get(company = cmp)
+        estimate_details=Estimate.objects.all().filter(company=cmp)
+        customer=Customer.objects.all().filter(company=cmp).count()
+        total_sales = Estimate.objects.filter(company=cmp).aggregate(total_price=Sum('grand_total'))['total_price']
+
+        
+        context = {
+        'allmodules':allmodules, 'details':dash_details,'log_details':log_details,'cmp':cmp,'estimate':estimate_details,'totalCustomers':customer,'total_sales':total_sales}
+        return render(request, 'zohomodules/Reports/estimate.html', context)
+    else:
+        return redirect('/')
+def shareEstimateReportToEmail(request):
+    if 'login_id' in request.session:
+        if request.session.has_key('login_id'):
+            log_id = request.session['login_id']
+        else:
+            return redirect('/')
+    log_details= LoginDetails.objects.get(id=log_id)
+    if log_details.user_type=="Company":
+        dash_details = CompanyDetails.objects.get(login_details=log_details)
+        if request.method == 'POST':
+            emails_string = request.POST['email_ids']
+            emails_list = [email.strip() for email in emails_string.split(',')]
+            email_message = request.POST['email_message']
+            cust = Customer.objects.filter(company=dash_details)
+            startDate = request.GET.get('start_date', None)
+            endDate = request.GET.get('end_date', None)
+            status = request.GET.get('status')
+            currentDate = datetime.today()
+            reportData = []
+            totalSales = 0
+            totvendr=0
+            totalbalance=0
+            customer=Customer.objects.all().filter(company=dash_details).count()
+
+            rec = Estimate.objects.filter(company=dash_details)
+            cust = Customer.objects.filter(company=dash_details)
+            if startDate and endDate:
+                rec = rec.filter(retainer_invoice_date__range=[startDate, endDate])
+            if status:
+                if status == 'Draft':
+                    rec = rec.filter(is_sent = 0)
+                elif status == 'Sent':
+                    rec = rec.filter(is_sent = 1)
+                    
+            for s in rec:
+                status=s.status
+                date=s.estimate_date
+                exp=s.expiration_date
+                est=s.estimate_number
+
+                partyName = s.customer.first_name
+                ref=s.reference_number
+               
+            
+              
+                total=s.grand_total
+              
+
+
+
+
+
+              
+
+                details = {
+                    'status':status,
+                    'date':date,
+                    'exp':exp,
+                    'est':est,
+                    'name': partyName,
+                    'ref':ref,
+                    
+                   
+                    'total':total
+                 
+                    
+                    
+                 
+                    
+                    
+                    
+                    
+                }
+                reportData.append(details)
+                totvendr=len(cust)
+
+            context = {'details': dash_details, 'reportData': reportData,'totalbalance':totalbalance,'totalSales': totalSales, 'totcust': totvendr, 'startDate': startDate, 'endDate': endDate, 'status': status,'totalCustomers':customer}
+            template_path = 'zohomodules/Reports/Estimate_Details_pdf.html'
+            template = get_template(template_path)
+
+            html  = template.render(context)
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+            pdf = result.getvalue()
+            filename = f'Estimate Details'
+            subject = f"Estimate Details"
+            email = EmailMsg(subject, f"Hi,\nPlease find the attached Report for Estimate Details. \n{email_message}\n\n--\nRegards,\n{dash_details.company_name}\n{dash_details.address}\n{dash_details.state} - {dash_details.country}\n{dash_details.contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+            email.attach(filename, pdf, "application/pdf")
+            email.send(fail_silently=False)
+
+            messages.success(request, 'Report has been shared via email successfully..!')
+            return redirect(estimatedetails)
+    
+    if log_details.user_type=="Staff":
+        company_details = StaffDetails.objects.get(login_details=log_details)
+        comp=CompanyDetails.objects.get(id=company_details.company.id)
+        allmodules = ZohoModules.objects.get(company=company_details.company, status='New')
+        if request.method == 'POST':
+            emails_string = request.POST['email_ids']
+            emails_list = [email.strip() for email in emails_string.split(',')]
+            email_message = request.POST['email_message']
+            cust = Customer.objects.filter(company=company_details.company)
+            startDate = request.GET.get('start_date', None)
+            endDate = request.GET.get('end_date', None)
+            status = request.GET.get('status')
+            currentDate = datetime.today()
+            reportData = []
+            totalSales = 0
+            totvendr=0
+            totalbalance=0
+
+            rec = RetainerInvoice.objects.filter(company=company_details.company)
+            cust = Customer.objects.filter(company=company_details.company)
+
+
+            if startDate and endDate:
+                rec = rec.filter(retainer_invoice_date__range=[startDate, endDate])
+            if status:
+                if status == 'Draft':
+                    rec = rec.filter(is_sent = 0)
+                elif status == 'Sent':
+                    rec = rec.filter(is_sent = 1)  
+
+            for s in rec:
+                partyName = s.customer_name.customer_display_name
+                date = s.retainer_invoice_date
+
+                rbill =s.retainer_invoice_number
+                ordrno =s.refrences
+                total = s.total_amount
+                paid=s.advance
+                balance=s.balance
+                st=s.is_sent
+                totalSales += float(s.total_amount)
+                totalbalance += float(s.balance)
+                if s.is_sent == 0:
+                    st = 'Draft'
+                elif s.is_sent == 1:
+                    st = 'Sent'  
+                
+                else:
+                    st = s.is_sent
+
+                details = {
+                    'date': date,
+                    'name': partyName,
+                    'rbill':rbill,
+                    'ordrno': ordrno,
+                    'total':total,
+                    'status':st,
+                    'balance':balance,
+                    
+                }
+                reportData.append(details)
+                totvendr=len(cust)
+
+            context = {'details': company_details, 'reportData': reportData,'totalbalance':totalbalance,'totalSales': totalSales, 'totcust': totvendr, 'startDate': startDate, 'endDate': endDate, 'status': status}
+            template_path = 'zohomodules/Reports/retainer_invoice_mail.html'
+            template = get_template(template_path)
+
+            html  = template.render(context)
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+            pdf = result.getvalue()
+            filename = f'Retainer Invoice Details'
+            subject = f"Retainer Invoice Details"
+            email = EmailMsg(subject, f"Hi,\nPlease find the attached Report for Retainer Invoice Details. \n{email_message}\n\n--\nRegards,\n{company_details.company.company_name}\n{company_details.company.address}\n{company_details.company.state} - {company_details.company.country}\n{company_details.company.contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+            email.attach(filename, pdf, "application/pdf")
+            email.send(fail_silently=False)
+
+            messages.success(request, 'Report has been shared via email successfully..!')
+            return redirect(estimatedetails)
+        
