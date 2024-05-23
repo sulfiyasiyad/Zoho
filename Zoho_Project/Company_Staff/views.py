@@ -44032,32 +44032,115 @@ def shareDayBookReportToEmail(request):
             return redirect(dayBookReport)
 
 #---------------- Zoho Final Daybook - Ginto Shaji - End-------------------->
+# def estimatedetails(request):
+#     if 'login_id' in request.session:
+#         log_id = request.session['login_id']
+#         log_details= LoginDetails.objects.get(id=log_id)
+#         if log_details.user_type == 'Company':
+#             cmp = CompanyDetails.objects.get(login_details = log_details)
+            
+            
+#             dash_details = CompanyDetails.objects.get(login_details=log_details)
+#         else:
+#             cmp = StaffDetails.objects.get(login_details = log_details).company
+            
+#             dash_details = StaffDetails.objects.get(login_details=log_details)
+
+       
+#         allmodules= ZohoModules.objects.get(company = cmp)
+#         estimate_details=Estimate.objects.all().filter(company=cmp)
+#         customer=Customer.objects.all().filter(company=cmp).count()
+#         total_sales = Estimate.objects.filter(company=cmp).aggregate(total_price=Sum('grand_total'))['total_price']
+
+        
+#         context = {
+#         'allmodules':allmodules, 'details':dash_details,'log_details':log_details,'cmp':cmp,'estimate':estimate_details,'totalCustomers':customer,'total_sales':total_sales}
+#         return render(request, 'zohomodules/Reports/estimate.html', context)
+#     else:
+#         return redirect('/')
 def estimatedetails(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
         log_details= LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
             cmp = CompanyDetails.objects.get(login_details = log_details)
-            
-            
             dash_details = CompanyDetails.objects.get(login_details=log_details)
         else:
             cmp = StaffDetails.objects.get(login_details = log_details).company
-            
             dash_details = StaffDetails.objects.get(login_details=log_details)
 
         # rec = RecurringInvoice.objects.filter(company = cmp)
         allmodules= ZohoModules.objects.get(company = cmp)
-        estimate_details=Estimate.objects.all().filter(company=cmp)
-        customer=Customer.objects.all().filter(company=cmp).count()
+        reportData = []
+        totInv = 0
+        totRecInv = 0
+        totCrdNote = 0
+        subTot = 0
+        subTotWOCrd = 0
+        totjour =0
         total_sales = Estimate.objects.filter(company=cmp).aggregate(total_price=Sum('grand_total'))['total_price']
+        customer=Customer.objects.all().filter(company=cmp).count()
+
+        cust = Customer.objects.filter(company=cmp)
+        est= Estimate.objects.filter(company=cmp)
+        print(est)
+        for c in est:
+            status=c.status
+            date=c.estimate_date
+            exp=c.expiration_date
+            est=c.estimate_number
+
+            party = c.customer.first_name
+            last = c.customer.last_name
+
+            ref=c.reference_number
+            cn=c.converted_to_invoice
+            cs=c.converted_to_sales_order
+               
+            
+              
+            total=c.grand_total
+
+           
+            details = {
+                'status':status,
+                'date':date,
+                'exp':exp,
+                'est':est,
+                'party': party,
+                'last':last,
+                'ref':ref,
+                'total':total,
+                'cn':cn,
+                'cs':cs
+
+               
+            }
+
+            reportData.append(details)
 
         
         context = {
-        'allmodules':allmodules, 'details':dash_details,'log_details':log_details,'cmp':cmp,'estimate':estimate_details,'totalCustomers':customer,'total_sales':total_sales}
+            'allmodules':allmodules, 'details':dash_details,'log_details':log_details , 'cmp':cmp,'reportData':reportData,'total_sales':total_sales,'totalCustomers':customer
+            
+        }
+        
+        
+
+
+       
+        
+        
         return render(request, 'zohomodules/Reports/estimate.html', context)
     else:
         return redirect('/')
+
+
+
+
+
+
+
 def shareEstimateReportToEmail(request):
     if 'login_id' in request.session:
         if request.session.has_key('login_id'):
@@ -44082,7 +44165,7 @@ def shareEstimateReportToEmail(request):
             totalbalance=0
             customer=Customer.objects.all().filter(company=dash_details).count()
 
-            rec = Estimate.objects.filter(company=dash_details)
+            rec= Estimate.objects.filter(company=dash_details)
             cust = Customer.objects.filter(company=dash_details)
             if startDate and endDate:
                 rec = rec.filter(retainer_invoice_date__range=[startDate, endDate])
@@ -44230,4 +44313,126 @@ def shareEstimateReportToEmail(request):
 
             messages.success(request, 'Report has been shared via email successfully..!')
             return redirect(estimatedetails)
-        
+def estimatereportcustomized(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+
+        # rec = RecurringInvoice.objects.filter(company = cmp)
+        allmodules= ZohoModules.objects.get(company = cmp)
+
+        if request.method == 'GET':
+            trans = request.GET['transactions']
+            startDate = request.GET['from_date']
+            endDate = request.GET['to_date']
+            if startDate == "":
+                startDate = None
+            if endDate == "":
+                endDate = None
+
+            reportData = []
+            totInv = 0
+            totRecInv = 0
+            totCrdNote = 0
+            subTot = 0
+            subTotWOCrd = 0
+            est = Estimate.objects.filter(company=cmp)
+
+            cust = Customer.objects.filter(company=cmp)
+            for s in cust:
+                name=s.first_name
+
+
+
+            for c in est:
+                status=c.status
+                date=c.estimate_date
+                exp=c.expiration_date
+                est=c.estimate_number
+
+                party = c.customer.first_name
+                last = c.customer.last_name
+
+                ref=c.reference_number
+                cn=c.converted_to_invoice
+                cs=c.converted_to_sales_order
+                
+                
+                
+                total=c.grand_total
+
+                
+                
+
+                if startDate == None or endDate == None:
+                    if trans == "invoice":
+                        inv = invoice.objects.filter(customer=cust, status = 'Saved')
+                        recInv = None
+                        crd = None
+                       
+                else:
+                    if trans == 'invoice':
+                        print("hai")
+                        inv = invoice.objects.filter(customer=s, date__range = [startDate, endDate], status = 'Saved')
+                        
+                        
+                        recInv = None
+                        crd = None
+
+                if inv:
+                    count += len(inv)
+                    for i in inv:
+                        sales += float(i.grand_total)
+                        totInv += float(i.grand_total)
+                        subTot += float(i.sub_total)
+                        subTotWOCrd += float(i.sub_total)
+
+                if recInv:
+                    count += len(recInv)
+                    for r in recInv:
+                        sales += float(r.grandtotal)
+                        totRecInv += float(r.grandtotal)
+                        subTot += float(r.subtotal)
+                        subTotWOCrd += float(r.subtotal)
+                
+                if crd:
+                    count += len(crd)
+                    for n in crd:
+                        sales -= float(n.grand_total)
+                        totCrdNote += float(n.grand_total)
+                        subTot -= float(n.sub_total)
+
+                details = {
+                    'status':status,
+                    'date':date,
+                    'exp':exp,
+                    'est':est,
+                    'party': party,
+                    'last':last,
+                    'ref':ref,
+                    'total':total,
+                    'cn':cn,
+                    'cs':cs
+
+                }
+
+                reportData.append(details)
+
+            totCust = len(cust)
+            totSale = totInv + totRecInv - totCrdNote
+            totSaleWOCrdNote = totInv + totRecInv
+
+            context = {
+                'allmodules':allmodules, 'cmp':cmp,  'reportData':reportData,'totalCustomers':totCust, 'totalInvoice':totInv, 'totalRecInvoice':totRecInv, 'totalCreditNote': totCrdNote,
+                'subtotal':subTot, 'subtotalWOCredit':subTotWOCrd, 'totalSale':totSale, 'totalSaleWOCredit':totSaleWOCrdNote,
+                'startDate':startDate, 'endDate':endDate, 'transaction':trans,
+            }
+            return render(request,'zohomodules/Reports/estimate.html', context)
+    else:
+        return redirect('estimatedetails')

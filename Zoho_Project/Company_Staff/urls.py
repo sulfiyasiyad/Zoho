@@ -938,6 +938,7 @@ urlpatterns = [
     #---------------- Zoho Final Daybook - Ginto Shaji - end-------------------->
     path('estimatedetails',views.estimatedetails,name='estimatedetails'),
     path('shareEstimateReportToEmail',views.shareEstimateReportToEmail,name='shareEstimateReportToEmail'),
+    path('estimatereportcustomized',views.estimatereportcustomized,name='estimatereportcustomized'),
 
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
 ]

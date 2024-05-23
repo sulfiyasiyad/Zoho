@@ -207,32 +207,32 @@
                             <button class="btn btn-warning" onclick="toggleContent()"><i class="fas fa-solid fa-gear"></i> Customize Report</button>
                             <div id="contentDiv" class="content">
                                 <h6 style="color: white;">Customize Report</h6>
-                                <form action="{% url 'Retainer_invoice_custom' %}" class="form reportCustomizeForm" method="get">
+                                <form action="{% url 'estimatereportcustomized' %}" class="form reportCustomizeForm" method="get">
                                     <div class="px-2">
                                         <label style="text-align:left ">From</label><br>
-                                        <input  class="inputdate form-control" type="date"  name="start_date" id="startDate" value="{{ startDate }}"style="color:white;">
-                                    </div>
+                                        <input name="from_date" class="inputdate form-control text-light" type="date" id="startDate" value="{{startDate}}" >
+                                        
+                                    </div> 
                                     <div class="px-2">
                                         <label style="text-align:left ">To</label><br>
-                                        <input type="date" class="inputdate form-control" name="end_date" id="endDate" value="{{ endDate }}" style="color:white;">
+                                        <input name="to_date" type="date" class="inputdate form-control text-light" id="endDate" value="{{endDate}}">
                                     </div>
                                     <div class="px-2">
-                                        <label style="text-align:left ">Status</label><br>
-                                        <select name="status" id="salesStatus" class="form-control" style="background:black;color:white;">
-                                            <option value="all">All</option>
-                                            <option value="Draft" {% if status_filter == 0 %} selected {% endif %}>Draft</option>
-                                            <!-- <option value="Not paid" {% if status_filter == "Not paid" %} selected {% endif %}>Not paid</option> -->
-                                            <option value="Sent" {% if status_filter == 1 %} selected {% endif %}>Sent</option>
-                                            <!-- <option value="partially paid" {% if status_filter == "partially paid" %} selected {% endif %}>Partially Paid</option>
-                                            <option value="overdue" {% if status_filter == "overdue" %} selected {% endif %}>Overdue</option> -->
+                                        <label style="text-align:left;color: white;">Estimate details</label><br>
+                                        <select name="transactions" id="salesTransactions" class="form-control text-light" style="background-color: #000;">
+                                            <option value="sent">Sent</option>
+                                            <option value="accept">Accept</option>
+                                            <option value="declined">Declined</option>
+                                            <option value="invoice">Invoice</option>
+                                            <option value="expired">Expired</option>
                                         </select>
                                     </div>
                                     <div class="d-flex px-2 mt-3 mb-4">
                                         <button type="submit" class="btn btn-outline-light w-50">Run Report</button>
                                         <button type="reset" onclick="toggleContent()" class="btn btn-outline-light ml-1 w-50">Cancel</button>
                                     </div>
-        
                                 </form>
+
                             </div>
                         </div>
                     </div>             
@@ -367,23 +367,39 @@
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                    {% for i in estimate %}
+                                                                    {% for i in reportData %}
                                                                     <tr>
                                                                         <td class="text-center">{{i.status}}</td>
-                                                                        <td class="text-center">{{i.estimate_date}}</td>
-                                                                        <td class="text-center"> {{i.expiration_date}}</td>
-                                                                        <td class="text-center"> {{i.estimate_number}}</td>
-                                                                        <td class="text-center"> {{i.customer.first_name}}{{i.customer.last_name}}</td>
-                                                                        <td class="text-center"> {{i.reference_number}}</td>
-                                                                        <td class="text-center"> {{i.converted_to_invoice.invoice_number}}</td>
-                                                                         <td class="text-center"> {{i.converted_to_sales_order.sales_order_number}}</td>
-                                                                        <td class="text-center"> {{i.grand_total}}</td>
+                                                                        <td class="text-center">{{i.date}}</td>
+                                                                        <td class="text-center"> {{i.exp}}</td>
+                                                                        <td class="text-center"> {{i.est}}</td>
+                                                                        <td class="text-center"> {{i.party}}{{i.last}}</td>
+                                                                        <td class="text-center"> {{i.ref}}</td>
+                                                                        <td class="text-center">
+                                                                            {% if i.cn %}
+                                                                             {{i.cn.invoice_number}}
+                                                                            {% endif %}
+
+ 
+
+                                                                        </td>
+                                                                         <td class="text-center">
+                                                                            {% if i.cs %}
+                                                                             {{i.cs.sales_order_number}}
+
+
+                                                                            
+
+                                                                            {% endif %}
+
+                                                                         </td>
+                                                                        <td class="text-center"> {{i.total}}</td>
 
                                                                     </tr>
                                                                     {% endfor %}
                                                                 </tbody>
                                                             </table>
-                                                            {% if not estimate %}
+                                                            {% if not reportData %}
                                                             <center><h4 class="text-dark">No data available.!</h4></center>
                                                             {% endif %}
                                             
