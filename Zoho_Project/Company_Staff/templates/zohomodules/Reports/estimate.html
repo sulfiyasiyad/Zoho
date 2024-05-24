@@ -220,11 +220,12 @@
                                     <div class="px-2">
                                         <label style="text-align:left;color: white;">Estimate details</label><br>
                                         <select name="transactions" id="salesTransactions" class="form-control text-light" style="background-color: #000;">
-                                            <option value="sent">Sent</option>
-                                            <option value="accept">Accept</option>
-                                            <option value="declined">Declined</option>
-                                            <option value="invoice">Invoice</option>
-                                            <option value="expired">Expired</option>
+                                            <option value="saved">saved</option>
+                                            <option value="draft">Draft</option>
+                                            <option value="Converted_to_Invoice">Converted to Invoice</option>
+                                            <option value="Converted_to_RecurringInvoice">Converted to RecurringInvoice</option>
+                                           
+                                            
                                         </select>
                                     </div>
                                     <div class="d-flex px-2 mt-3 mb-4">
@@ -370,22 +371,23 @@
                                                                     {% for i in reportData %}
                                                                     <tr>
                                                                         <td class="text-center">{{i.status}}</td>
-                                                                        <td class="text-center">{{i.date}}</td>
-                                                                        <td class="text-center"> {{i.exp}}</td>
-                                                                        <td class="text-center"> {{i.est}}</td>
-                                                                        <td class="text-center"> {{i.party}}{{i.last}}</td>
-                                                                        <td class="text-center"> {{i.ref}}</td>
+                                                                        <td class="text-center">{{i.estimate_date}}</td>
+                                                                        <td class="text-center"> {{i.expiration_date}}</td>
+                                                                        <td class="text-center"> {{i.estimate_number}}</td>
+                                                                        <td class="text-center"> {{i.customer.first_name}}{{i.customer.last_name}}</td>
+                                                                        <td class="text-center"> {{i.reference_number}}</td>
                                                                         <td class="text-center">
-                                                                            {% if i.cn %}
-                                                                             {{i.cn.invoice_number}}
+                                                                            {% if i.converted_to_invoice %}
+                                                                             {{i.converted_to_invoice.invoice_number}}
                                                                             {% endif %}
 
  
 
                                                                         </td>
                                                                          <td class="text-center">
-                                                                            {% if i.cs %}
-                                                                             {{i.cs.sales_order_number}}
+                                                                            {% if i.converted_to_sales_order %}
+                                                                            
+                                                                             {{i.converted_to_sales_order.sales_order_number}}
 
 
                                                                             
@@ -393,7 +395,7 @@
                                                                             {% endif %}
 
                                                                          </td>
-                                                                        <td class="text-center"> {{i.total}}</td>
+                                                                        <td class="text-center"> {{i.grand_total}}</td>
 
                                                                     </tr>
                                                                     {% endfor %}
@@ -409,7 +411,7 @@
                                                             <div class="row p-4">
                                                                 <div class="col-10">
                                                                     <div class="row mb-2">
-                                                                        <div class="col-4">Total customer : <p style="font-size: 19px;">{{totalCustomers|default:0}}</p>
+                                                                        <div class="col-4">Total customer : <p style="font-size: 19px;">{{totalCustomer|default:0}}</p>
                                                                         </div><br><br>
                                                                     </div>
                                                                     <!-- <div class="row ">
@@ -423,7 +425,7 @@
                                                                 </div>
                                                                 <div class="col-2 text-center">
                                                                     <h5 style="padding-top: 70px; color: black; font-weight: bold;">Total Amount:</h5>
-                                                                    <h4 class="text-dark" style="font-weight: 600;" id="totvalue">Rs.<span id="superTotal">{{total_sales|default:0|floatformat:2}}</span></h4>
+                                                                    <h4 class="text-dark" style="font-weight: 600;" id="totvalue">Rs.<span id="superTotal">{{total_sales_amount|default:0|floatformat:2}}</span></h4>
                                                                 </div>
                                                             </div>
                                                         </section>
