@@ -218,12 +218,14 @@
                                         <input name="to_date" type="date" class="inputdate form-control text-light" id="endDate" value="{{endDate}}">
                                     </div>
                                     <div class="px-2">
-                                        <label style="text-align:left;color: white;">Estimate details</label><br>
+                                        <label style="text-align:left;color: white;">Status</label><br>
                                         <select name="transactions" id="salesTransactions" class="form-control text-light" style="background-color: #000;">
-                                            <option value="saved">saved</option>
+                                            <option value="all">All</option>
+                                            <option value="saved">Saved</option>
                                             <option value="draft">Draft</option>
                                             <option value="Converted_to_Invoice">Converted to Invoice</option>
                                             <option value="Converted_to_RecurringInvoice">Converted to RecurringInvoice</option>
+                                            <option value="Converted_to_salesorder">Converted to Salesorder</option>
                                            
                                             
                                         </select>
@@ -358,7 +360,7 @@
                                                                         <th class="text-center">STATUS</th>
                                                                         <th class="text-center">DATE</th>
                                                                         <th class="text-center">EXP DATE</th>
-                                                                        <th class="text-center">ESTIMATE No</th>
+                                                                        <th class="text-center">ESTIMATE NO</th>
                                                                         <th class="text-center">CUSTOMER NAME</th>
                                                                         <th class="text-center">REFERENCE NO</th>
                                                                         <th class="text-center">INVOICE NO</th>
@@ -370,7 +372,22 @@
                                                                 <tbody>
                                                                     {% for i in reportData %}
                                                                     <tr>
-                                                                        <td class="text-center">{{i.status}}</td>
+                                                                        <td class="text-center">
+                                                                        {% if i.converted_to_invoice %}
+                                                                            Converted to Invoice 
+                                                                        {% elif i.converted_to_recurring_invoice %}
+                                                                            Converted to RecurringInvoice 
+                                                                        {% elif i.converted_to_sales_order %}
+                                                                            Converted to Sales order 
+                                                                        {% else %}
+                                                                            {{i.status}}
+                                                                        {% endif %} 
+                                                                        
+                                                                                
+                                                                            
+                                                                     
+
+                                                                        </td>
                                                                         <td class="text-center">{{i.estimate_date}}</td>
                                                                         <td class="text-center"> {{i.expiration_date}}</td>
                                                                         <td class="text-center"> {{i.estimate_number}}</td>
@@ -378,7 +395,10 @@
                                                                         <td class="text-center"> {{i.reference_number}}</td>
                                                                         <td class="text-center">
                                                                             {% if i.converted_to_invoice %}
-                                                                             {{i.converted_to_invoice.invoice_number}}
+                                                                                {{i.converted_to_invoice.invoice_number}}
+                                                                            {% elif i.converted_to_recurring_invoice %}
+                                                                                 {{i.converted_to_recurring_invoice.rec_invoice_no}}
+                                                                            
                                                                             {% endif %}
 
  
@@ -443,7 +463,7 @@
         <div class="modal-dialog">
           <div class="modal-content" style="background-color: #3b3b3b;">
             <div class="modal-header">
-              <h3 class="modal-title text-light" id="exampleModalLabel">Share Retainer Invoice</h3>
+              <h3 class="modal-title text-light" id="exampleModalLabel">Share Estimate Details</h3>
               <button type="button" class="btn close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true" style="font-size: x-large;">&times;</span>
               </button>

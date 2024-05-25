@@ -33289,7 +33289,7 @@ def salesReportCustomized(request):
                 sale = sale.filter(sales_order_date__range=[startDate, endDate])
 
             if trans == 'saved':
-                sale = sale.filter(status='Save', convert_to_invoice__isnull=True, convert_to_recurringinvoice__isnull=True)
+                sale = sale.filter(status='Save',convert_to_invoice__isnull=True, convert_to_recurringinvoice__isnull=True)
             elif trans == 'draft':
                 sale = sale.filter(status='Draft', convert_to_invoice__isnull=True, convert_to_recurringinvoice__isnull=True)
             elif trans == 'Converted_to_Invoice':
@@ -44429,7 +44429,7 @@ def shareEstimateReportToEmail(request):
                 'start_date': start_date,
                 'end_date': end_date
             }
-            print(context)
+            
 
             template_path = 'zohomodules/Reports/Estimate_Details_pdf.html'
             template = get_template(template_path)
@@ -44438,8 +44438,8 @@ def shareEstimateReportToEmail(request):
             pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
             pdf = result.getvalue()
 
-            filename = f'Estimate Reports Details'
-            subject = f"Estimate Reports Details"
+            filename = f'Estimate  Details'
+            subject = f"Estimate Details"
             email = EmailMsg(
                 subject,
                 f"Hi,\nPlease find the attached Estimate details for\n{email_message}\n\n--\nRegards,\n{com.company_name}\n{com.address}\n{com.state} - {com.country}\n{com.contact}",
@@ -44449,9 +44449,9 @@ def shareEstimateReportToEmail(request):
             email.attach(filename, pdf, "application/pdf")
             email.send(fail_silently=False)
 
-            # messages.success(request, 'Salesorder Reports has been shared via email successfully..!')
+           
             return redirect(estimatedetails)
-    # messages.error(request, 'An error occurred while sharing Salesorder Reports via email.')
+ 
     return redirect(estimatedetails)
 def estimatereportcustomized(request):
     if 'login_id' in request.session:
@@ -44459,8 +44459,12 @@ def estimatereportcustomized(request):
         log_details= LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
             comp_details = CompanyDetails.objects.get(login_details = log_details)
+             
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
         else:
             comp_details = StaffDetails.objects.get(login_details = log_details).company
+             
+            dash_details = StaffDetails.objects.get(login_details=log_details)
 
         allmodules = ZohoModules.objects.get(company=comp_details,status='New')
         data = Customer.objects.filter(company=comp_details)  
@@ -44474,27 +44478,34 @@ def estimatereportcustomized(request):
             if endDate == "":
                 endDate = None
 
-            sale = Estimate.objects.filter(company=comp_details)  
+            est = Estimate.objects.filter(company=comp_details)  
 
             if startDate and endDate:
-                sale = sale.filter(estimate_date__range=[startDate, endDate])
+                est = est.filter(estimate_date__range=[startDate, endDate])
+
 
             if trans == 'saved':
-                sale = sale.filter(status='Save', convert_to_invoice__isnull=True, convert_to_recurringinvoice__isnull=True)
+                est = est.filter(status='Saved',converted_to_invoice__isnull=True,converted_to_recurring_invoice__isnull=True,converted_to_sales_order__isnull=True)
             elif trans == 'draft':
-                sale = sale.filter(status='Draft', convert_to_invoice__isnull=True, convert_to_recurringinvoice__isnull=True)
+                est = est.filter(status='Draft',converted_to_invoice__isnull=True,converted_to_recurring_invoice__isnull=True,converted_to_sales_order__isnull=True)
             elif trans == 'Converted_to_Invoice':
-                sale = sale.filter(convert_to_invoice__isnull=False)
+                est= est.filter(converted_to_invoice__isnull=False)
             elif trans == 'Converted_to_RecurringInvoice':
-                sale = sale.filter(convert_to_recurringinvoice__isnull=False)
+                est = est.filter(converted_to_recurring_invoice__isnull=False)
+            elif trans == 'Converted_to_salesorder':
+                est= est.filter(converted_to_sales_order__isnull=False)
+            elif trans == 'all':
+                est=est
+            
+            
                 
-            total_sales_amount = sale.aggregate(total_sales=Sum('grand_total'))['total_sales'] or 0
+            total_sales_amount = est.aggregate(total_sales=Sum('grand_total'))['total_sales'] or 0
 
             # Count unique customers based on the filtered sales orders
-            totalCustomer = sale.values('customer').distinct().count()
+            totalCustomer = est.values('customer').distinct().count()
 
             context = {
-                'reportData': sale,
+                'reportData': est,
                 'log_details': log_details,
                 'allmodules': allmodules,
                 'startDate': startDate, 
@@ -44502,7 +44513,8 @@ def estimatereportcustomized(request):
                 'transaction': trans,
                 'total_sales_amount': total_sales_amount,
                 'totalCustomer': totalCustomer,
-                'companyName':comp_details.company_name, 
+                'cmp':comp_details.company_name,
+                'details':dash_details 
             }
             return render(request,'zohomodules/Reports/estimate.html', context)
         else:
